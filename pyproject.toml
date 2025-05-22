@@ -17,3 +17,8 @@ dependencies    = [
 
 [project.urls]
 Homepage = "https://drylab.bio"
+
+[tool.hatch.build.targets.sdist]
+include = ["drylab/schemas/*.json"]
+[tool.hatch.build.targets.wheel]
+include = ["drylab/schemas/*.json"]

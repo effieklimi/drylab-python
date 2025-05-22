@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RMSD CSV",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "time": { "type": "number" },
+      "rmsd": { "type": "number" }
+    },
+    "required": ["time", "rmsd"]
+  },
+  "payload_encoding": "utf-8"
+}
