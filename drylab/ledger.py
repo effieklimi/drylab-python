@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS events (
 class Ledger:
     def __init__(self, path: str | Path = ":memory:") -> None:
         self.path = str(path)
-        self._db = sqlite3.connect(self.path, check_same_thread=False)
+        self._db = sqlite3.connect(path, check_same_thread=False)
         self._db.executescript(_DB_SCHEMA_SQL)
         self._db.commit()
 
@@ -41,35 +41,31 @@ class Ledger:
         validate(schema, blob)
         with self._db:
             self._db.execute(
-                "INSERT OR IGNORE INTO blobs (sha, bytes) VALUES (?, ?)",
-                (sha, blob),
+                "INSERT OR IGNORE INTO blobs (sha, bytes) VALUES (?,?)",(sha,blob)
             )
             seq = self._db.execute(
-                "SELECT COALESCE(MAX(seq), 0) + 1 FROM events WHERE run_id = ?",
-                (run_id,),
+                "SELECT COALESCE(MAX(seq),0)+1 FROM events WHERE run_id=?",(run_id,)
             ).fetchone()[0]
             self._db.execute(
-                "INSERT INTO events (run_id, seq, sha, schema, ts) VALUES (?,?,?,?,strftime('%s','now')*1000)",
-                (run_id, seq, sha, schema),
+               "INSERT INTO events(run_id,seq,sha,schema,ts) VALUES(?,?,?,?,strftime('%s','now')*1000)",
+                (run_id,seq,sha,schema),
             )
         return sha
 
     def cat(self, sha: Sha256) -> Blob:
-        row = self._db.execute("SELECT bytes FROM blobs WHERE sha=?", (sha,)).fetchone()
-        if not row:
-            raise KeyError(sha)
+        row = self._db.execute("SELECT bytes FROM blobs WHERE sha=?",(sha,)).fetchone()
+        if not row: raise KeyError(sha)
         return row[0]
 
     def tail(self, run_id: str, from_seq: int = 0) -> Iterator[EventRow]:
         cursor = from_seq
         while True:
             rows = self._db.execute(
-                "SELECT seq, sha, schema, ts FROM events WHERE run_id=? AND seq>? ORDER BY seq",
-                (run_id, cursor),
+                "SELECT seq,sha,schema,ts FROM events WHERE run_id=? AND seq>? ORDER BY seq",
+                (run_id,cursor),
             ).fetchall()
-            if not rows:
-                break
-            for seq, sha, schema, ts in rows:
+            if not rows: break
+            for seq,sha,schema,ts in rows:
                 header = EventHeader(id=sha, schema=schema, ts=ts)
                 blob = self.cat(sha)
                 yield EventRow(header=header, blob=blob, run_id=run_id, seq=seq)

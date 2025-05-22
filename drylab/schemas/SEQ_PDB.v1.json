@@ -2,6 +2,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Sequence PDB",
   "type": "string",
-  "description": "FAKE PDB sequence blob encoded as utf-8 string",
+  "description": "FAKE PDB sequence blob utf-8",
   "payload_encoding": "utf-8"
 }

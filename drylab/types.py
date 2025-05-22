@@ -17,11 +17,18 @@ def _now_ts() -> Timestamp:
 
 
 class EventHeader(BaseModel):
+    """Immutable metadata for every payload with clear naming."""
     id: Sha256
-    schema: SchemaId
+    schema_id: SchemaId = Field(..., alias="schema")
     ts: Timestamp = Field(default_factory=_now_ts)
-
-    model_config = {"frozen": True}
+    model_config = {
+        "populate_by_field_name": True,
+        "frozen": True,
+    }
+    @property
+    def schema(self) -> SchemaId:
+        """Convenience property mapping to alias 'schema'."""
+        return self.schema_id
 
 
 class Event(BaseModel):
