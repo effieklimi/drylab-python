@@ -1,23 +1,19 @@
-# drylab/pyproject.toml
-# ----------------------
-# minimal build config using PEP‑621 metadata and hatchling so users can `pip install -e .`
-
 [build-system]
 requires = ["hatchling>=1.18"]
 build-backend = "hatchling.build"
 
 [project]
-name = "drylab"
-version = "0.0.1"
-description = "event‑sourced lab‑automation core"
-authors = [{ name = "DryLab, Inc.", email = "dev@drylab.io" }]
-readme = "README.md"
+name            = "drylab"
+version         = "0.0.1"
+description     = "event‑sourced lab‑automation core"
+authors         = [ { name = "DryLab, Inc.", email = "dev@drylab.io" } ]
+readme          = "README.md"
 requires-python = ">=3.10"
-dependencies = [
+dependencies    = [
   "pydantic>=2.6",
-  "sqlite-utils>=3.35",   # thin wrapper over sqlite3 for convenience
+  "sqlite-utils>=3.35",
   "jsonschema>=4.22",
 ]
 
 [project.urls]
-Homepage = "https://drylab.io"
+Homepage = "https://drylab.bio"

@@ -1,9 +1,9 @@
+import hashlib
 import sqlite3
-from contextlib import contextmanager
 from pathlib import Path
-from typing import AsyncIterator, Iterator, List, Tuple
+from typing import Iterator
 
-from .types import Blob, Event, EventHeader, EventRow, SchemaId, Sha256
+from .types import Blob, EventHeader, EventRow, SchemaId, Sha256
 from .schema_registry import validate
 
 _DB_SCHEMA_SQL = """
@@ -30,17 +30,15 @@ class Ledger:
         self._db.executescript(_DB_SCHEMA_SQL)
         self._db.commit()
 
-    # ------------------------------------------------------------------ utils
+    # ------------------------------------------------ utils
     @staticmethod
     def _hash(blob: Blob) -> Sha256:
         return Sha256(hashlib.sha256(blob).hexdigest())
 
-    # ----------------------------------------------------------- public api
+    # ------------------------------------------------ api
     def publish(self, *, run_id: str, schema: SchemaId, blob: Blob) -> Sha256:
         sha = self._hash(blob)
-        # schema validation (raises on failure)
         validate(schema, blob)
-
         with self._db:
             self._db.execute(
                 "INSERT OR IGNORE INTO blobs (sha, bytes) VALUES (?, ?)",
@@ -51,16 +49,16 @@ class Ledger:
                 (run_id,),
             ).fetchone()[0]
             self._db.execute(
-                "INSERT INTO events (run_id, seq, sha, schema, ts) VALUES (?, ?, ?, ?, strftime('%s','now')*1000)",
+                "INSERT INTO events (run_id, seq, sha, schema, ts) VALUES (?,?,?,?,strftime('%s','now')*1000)",
                 (run_id, seq, sha, schema),
             )
         return sha
 
     def cat(self, sha: Sha256) -> Blob:
-        row = self._db.execute("SELECT bytes FROM blobs WHERE sha = ?", (sha,)).fetchone()
+        row = self._db.execute("SELECT bytes FROM blobs WHERE sha=?", (sha,)).fetchone()
         if not row:
             raise KeyError(sha)
-        return Blob(row[0])
+        return row[0]
 
     def tail(self, run_id: str, from_seq: int = 0) -> Iterator[EventRow]:
         cursor = from_seq
@@ -68,15 +66,14 @@ class Ledger:
             rows = self._db.execute(
                 "SELECT seq, sha, schema, ts FROM events WHERE run_id=? AND seq>? ORDER BY seq",
                 (run_id, cursor),
-            )
-            fetched = rows.fetchall()
-            if not fetched:
+            ).fetchall()
+            if not rows:
                 break
-            for seq, sha, schema, ts in fetched:
+            for seq, sha, schema, ts in rows:
                 header = EventHeader(id=sha, schema=schema, ts=ts)
                 blob = self.cat(sha)
                 yield EventRow(header=header, blob=blob, run_id=run_id, seq=seq)
                 cursor = seq
 
-    def replay(self, run_id: str) -> Iterator[EventRow]:
-        return self.tail(run_id, from_seq=0)
+    def replay(self, run_id: str):
+        return self.tail(run_id)
