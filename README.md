@@ -1,10 +1,16 @@
-# DryLab
+# Drylab (python package)
 
 Event-sourced lab automation core library for Python.
 
 ## Overview
 
-DryLab is a Python library designed for event-sourced lab automation. It provides a robust foundation for building automated laboratory systems with event-driven architecture, making it easier to track, manage, and automate laboratory processes.
+Drylab delivers **unbreakable reproducibility** and an **immutable audit trail** for every step of the autonomous science workflows carried out by your scientific AI agents.
+
+Drylab uses an event‐sourced ledger that **cryptographically seals**, **schema‐validates** and **version‐controls** every instrument readout, simulation snapshot and llm insight
+
+- **instant provenance**: trace any result back to the exact raw bytes
+- **built-in verification**: reject bad data before it contaminates your analysis
+- **replay & branching**: fork a run, tweak parameters and diff outcomes in seconds
 
 ## Features
 
