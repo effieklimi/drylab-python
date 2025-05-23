@@ -6,9 +6,30 @@ build-backend = "hatchling.build"
 name            = "drylab"
 version         = "0.0.1"
 description     = "event‑sourced lab‑automation core"
-authors         = [ { name = "Drylab", email = "effie@effie.bio" } ]
+authors         = [ { name = "Effie Klimi", email = "effie@effie.bio" } ]
 readme          = "README.md"
+license         = "MIT"
+license-files   = ["LICENSE"]
 requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: MIT License",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Scientific/Engineering :: Financial Analysis",
+    "Topic :: Scientific/Engineering :: Quantum Computing",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Libraries :: Frameworks",
+]
 dependencies    = [
   "pydantic>=2.6",
   "sqlite-utils>=3.35",
@@ -17,6 +38,8 @@ dependencies    = [
 
 [project.urls]
 Homepage = "https://drylab.bio"
+Issues = "https://github.com/effieklimi/drylab-python/issues"
+Source = "https://github.com/effieklimi/drylab-python"
 
 [tool.hatch.build.targets.sdist]
 include = ["drylab/schemas/*.json"]
