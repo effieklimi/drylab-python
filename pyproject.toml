@@ -3,9 +3,9 @@ requires = ["hatchling>=1.18"]
 build-backend = "hatchling.build"
 
 [project]
-name            = "drylab"
-version         = "0.0.1"
-description     = "event‑sourced lab‑automation core"
+name            = "Drylab"
+version         = "0.0.2"
+description     = "Event‑sourced, provenance-first framework for scientific agents and lab‑automation"
 authors         = [ { name = "Effie Klimi", email = "effie@effie.bio" } ]
 readme          = "README.md"
 license         = "MIT"

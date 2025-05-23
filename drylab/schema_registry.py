@@ -1,16 +1,16 @@
 import importlib.resources as _r
 import json
 from typing import Dict
-
 import jsonschema
+from .types import SchemaId, Blob, Event
 
-from .types import SchemaId, Blob
+_SCHEMA_CACHE: Dict[SchemaId, dict] = {} 
+# cache to store loaded schemas. two "arguments", the type of its keys and the type 
+# of its values. this one maps schema IDs to their JSON representations (dicts in python)
 
-_SCHEMA_CACHE: Dict[SchemaId, dict] = {}
 
-
-class UnknownSchemaError(RuntimeError):
-    pass
+class UnknownSchemaError(RuntimeError): # custom error for when a schema isn't found
+    pass # Similar to how TypeScript would throw an error for missing type definitions
 
 
 def load_schema(schema_id: SchemaId) -> dict:
@@ -29,9 +29,12 @@ def load_schema(schema_id: SchemaId) -> dict:
     return schema
 
 
-def validate(schema_id: SchemaId, blob: Blob) -> None:
+def validate_schema(schema_id: SchemaId, blob: Blob) -> None:  # Renamed from validate to validate_schema
     schema = load_schema(schema_id)
     data = blob
     if schema.get("payload_encoding") == "utf-8":
         data = blob.decode("utf-8")
     jsonschema.validate(data, schema)
+
+# def validate_event(event: Event) -> None:
+#     validate_schema(event.header.schema_id, event.blob)
