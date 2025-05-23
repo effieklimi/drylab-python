@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name            = "drylab"
 version         = "0.0.1"
 description     = "event‑sourced lab‑automation core"
-authors         = [ { name = "DryLab, Inc.", email = "dev@drylab.io" } ]
+authors         = [ { name = "Drylab", email = "effie@effie.bio" } ]
 readme          = "README.md"
 requires-python = ">=3.10"
 dependencies    = [
