@@ -24,11 +24,8 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Physics",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
     "Topic :: Scientific/Engineering :: Medical Science Apps.",
-    "Topic :: Scientific/Engineering :: Financial Analysis",
     "Topic :: Scientific/Engineering :: Quantum Computing",
     "Topic :: Software Development :: Libraries :: Application Frameworks",
-    "Topic :: Software Development :: Libraries :: Python Modules",
-    "Topic :: Software Development :: Libraries :: Frameworks",
 ]
 dependencies    = [
   "pydantic>=2.6",
