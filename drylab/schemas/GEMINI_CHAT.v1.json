@@ -1,0 +1,8 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Gemini chat response (UTF-8)",
+  "description": "Plain-text completion returned by Google Gemini; stored for provenance and prompt-reuse caching.",
+  "type": "string",
+  "minLength": 1,
+  "payload_encoding": "utf-8"
+}

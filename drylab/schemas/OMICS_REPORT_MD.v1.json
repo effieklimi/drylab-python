@@ -1,0 +1,8 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Omics Markdown report",
+  "description": "Narrative Markdown produced by the LLM (UTF-8). Should mention upstream artefact SHA(s) for full provenance.",
+  "type": "string",
+  "minLength": 20,
+  "payload_encoding": "utf-8"
+}

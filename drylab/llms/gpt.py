@@ -1,20 +1,20 @@
 # drylab/tools/llm.py
 import hashlib, json, os, asyncio
-from google import genai
-from ...types import Blob           # reuse your NewType
-from ...ledger import Ledger
-from ...types import EventHeader, EventRow
+from drylab.llms.gpt import OpenAIGPT
+from ..types import Blob           # reuse your NewType
+from ..ledger import Ledger
+from ..types import EventHeader, EventRow
 
-_CHAT_SCHEMA = "GEMINI_CHAT@1"
+_CHAT_SCHEMA = "OPENAI_CHAT@1"
 
-class GoogleGemini:
-    def __init__(self, ledger: Ledger, model="gemini-2.5-flash", api_key=None):
+class OpenAIGPT:
+    def __init__(self, ledger: Ledger, model="gpt-4o-mini"):
         self.ledger = ledger
-        self.client = genai.Client(api_key=api_key)
+        self.client = OpenAIGPT()
         self.model = model
 
-    async def chat(self, content: list[dict]) -> str:
-        payload = json.dumps({"content": content, "model": self.model}).encode()
+    async def chat(self, messages: list[dict]) -> str:
+        payload = json.dumps({"m": messages, "model": self.model}).encode()
         sha = hashlib.sha256(payload).hexdigest()
 
         # ➊ check if we answered this prompt before
@@ -25,11 +25,11 @@ class GoogleGemini:
             pass
 
         # ➋ otherwise call the API
-        resp = await self.client.models.generate_content(
-            model=self.model, 
-            contents=self.content
+        resp = await self.client.chat.completions.create(
+            model=self.model,
+            messages=messages,
         )
-        answer = resp.text
+        answer = resp.choices[0].message.content
 
         # ➌ store answer as its own Artifact so provenance tracks the LLM, too
         header = EventHeader(id=sha, schema_id=_CHAT_SCHEMA)

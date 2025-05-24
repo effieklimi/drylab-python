@@ -1,0 +1,6 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DEG results CSV",
+  "type": "string",
+  "payload_encoding": "utf-8"
+}

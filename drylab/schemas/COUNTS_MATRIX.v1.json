@@ -1,0 +1,6 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Counts matrix CSV",
+  "type": "string",
+  "payload_encoding": "utf-8"
+}

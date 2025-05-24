@@ -5,6 +5,7 @@ from typing import Iterator
 from .validators import EventValidator
 from .types import Blob, EventHeader, EventRow, SchemaId, Sha256
 from .schema_registry import validate_schema
+import asyncio
 
 _DB_SCHEMA_SQL = """
 PRAGMA journal_mode = WAL;
@@ -35,6 +36,44 @@ class Ledger:
         return Sha256(hashlib.sha256(blob).hexdigest())
 
     # ------------------------------------------------ api
+     # internal: set by publish() when a new row is committed
+    _condition = asyncio.Condition()
+
+    async def subscribe(self, run_id: str, cursor: int = 0):
+        """
+        Async generator that yields new EventRow objects for the given run_id.
+        It blocks until at least one new event exists or until the generator
+        is exhausted (e.g. all reactors finished and ledger is closed).
+        """
+        while True:
+            # 1️⃣  fetch anything newer than cursor
+            rows = self._db.execute(
+                "SELECT seq,sha,schema,ts FROM events WHERE run_id=? AND seq>? ORDER BY seq",
+                (run_id, cursor),
+            ).fetchall()
+
+            if rows:
+                for seq, sha, schema, ts in rows:
+                    header = EventHeader(id=sha, schema=schema, ts=ts)
+                    blob = self.cat(sha)
+                    yield EventRow(
+                        header=header,   # keyword args instead of positionals
+                        blob=blob,
+                        run_id=run_id,
+                        seq=seq,
+                    )
+                    cursor = seq
+                continue               # loop again without blocking
+
+            # 2️⃣  wait for a publish() to notify
+            async with self._condition:
+                try:
+                    await asyncio.wait_for(self._condition.wait(), timeout=5)
+                except asyncio.TimeoutError:
+                    # No new data for 5 s  → assume upstream is done
+                    return
+    
+    
     def publish(self, event: EventRow) -> Sha256:
         """Publish an event to the ledger.
         
@@ -66,7 +105,13 @@ class Ledger:
                 "INSERT INTO events(run_id,seq,sha,schema,ts) VALUES(?,?,?,?,strftime('%s','now')*1000)",
                 (event.run_id, seq, sha, event.header.schema_id),
             )
+            asyncio.create_task(self._notify())
         return sha
+    
+    
+    async def _notify(self):
+        async with self._condition:
+            self._condition.notify_all()
 
     def cat(self, sha: Sha256) -> Blob:
         row = self._db.execute("SELECT bytes FROM blobs WHERE sha=?", (sha,)).fetchone()

@@ -11,6 +11,7 @@ from .ledger import Ledger
 from .reactor import Reactor
 from .schema_registry import validate_schema
 from .validators import EventValidator
+from .pipeline import Pipeline
 
 __all__ = [
     'Blob',
@@ -23,5 +24,6 @@ __all__ = [
     'Ledger',
     'Reactor',
     'validate_schema',
-    'EventValidator'
+    'EventValidator',
+    'Pipeline'
 ]

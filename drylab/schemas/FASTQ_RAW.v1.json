@@ -1,0 +1,7 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Raw FASTQ (text)",
+  "type": "string",
+  "minLength": 8,
+  "payload_encoding": "utf-8"
+}
