@@ -29,7 +29,7 @@ def load_schema(schema_id: SchemaId) -> dict:
     return schema
 
 
-def validate_schema(schema_id: SchemaId, blob: Blob) -> None:  # Renamed from validate to validate_schema
+def validate_schema(schema_id: SchemaId, blob: Blob) -> None:
     schema = load_schema(schema_id)
     data = blob
     if schema.get("payload_encoding") == "utf-8":
