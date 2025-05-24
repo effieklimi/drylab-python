@@ -19,8 +19,7 @@ class KallistoReactor(Reactor):
         w.writerow(["gene", "sample1", "sample2"])
         w.writerow(["TP53", 42, 17])
         w.writerow(["ACTA2", 500, 250])
-        print("KallistoReactor w header: ", buf.getvalue())
-        # print("KallistoReactor before publish: ", buf.getvalue())
+        print("KallistoReactor before publish: ", buf.getvalue())
         return [(COUNTS, Blob(buf.getvalue().encode()))]
 
 # ------------------------------------------------------------------ #
@@ -32,7 +31,7 @@ class DiffExprReactor(Reactor):
         # fake DE calculation
         degs = counts.head(100)                # demo subset
         buf = io.StringIO(); degs.to_csv(buf, index=False)
-        # print("DiffExprReactor before publish: ", buf.getvalue())
+        print("DiffExprReactor before publish: ", buf.getvalue())
         return [(DEGS, Blob(buf.getvalue().encode()))]
 
 # ------------------------------------------------------------------ #
@@ -45,7 +44,7 @@ class EnrichReactor(Reactor):
         enr["Term"] = "Pathway_X"
         enr["Adjusted P-value"] = 0.05
         buf = io.StringIO(); enr.to_csv(buf, index=False)
-        # print("EnrichReactor before publish: ", buf.getvalue())
+        print("EnrichReactor before publish: ", buf.getvalue())
         return [(ENRICH, Blob(buf.getvalue().encode()))]
 
 # ------------------------------------------------------------------ #
@@ -72,7 +71,7 @@ class LLMReportReactor(Reactor):
 
         _(source sha: {ev.header.id})_
         """).encode()
-        # print("LLMReportReactor before publish: ", md)
+        print("LLMReportReactor before publish: ", md)
         return [(REPORT, Blob(md))]
 
 # ------------------------------------------------------------------ #

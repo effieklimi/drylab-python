@@ -41,73 +41,96 @@ class Ledger:
 
     async def subscribe(self, run_id: str, cursor: int = 0):
         """
-        Async generator that yields new EventRow objects for the given run_id.
-        It blocks until at least one new event exists or until the generator
-        is exhausted (e.g. all reactors finished and ledger is closed).
+        Async generator that yields EventRow objects for *run_id*.
+        It blocks until new rows appear; when no rows arrive for 5 s the
+        generator returns so the calling reactor can finish.
         """
         while True:
-            # 1️⃣  fetch anything newer than cursor
             rows = self._db.execute(
-                "SELECT seq,sha,schema,ts FROM events WHERE run_id=? AND seq>? ORDER BY seq",
+                "SELECT seq, sha, schema, ts "
+                "FROM   events "
+                "WHERE  run_id = ? AND seq > ? "
+                "ORDER  BY seq",
                 (run_id, cursor),
             ).fetchall()
 
             if rows:
                 for seq, sha, schema, ts in rows:
+                    cursor = seq               # ← update BEFORE yield
                     header = EventHeader(id=sha, schema=schema, ts=ts)
-                    blob = self.cat(sha)
+                    blob   = self.cat(sha)
                     yield EventRow(
-                        header=header,   # keyword args instead of positionals
+                        header=header,
                         blob=blob,
                         run_id=run_id,
                         seq=seq,
                     )
-                    cursor = seq
-                continue               # loop again without blocking
+                # → loop immediately to fetch rows newer than the final seq
+                continue
 
-            # 2️⃣  wait for a publish() to notify
+            # ── No rows; wait for a notifier or timeout ─────────────────
             async with self._condition:
                 try:
                     await asyncio.wait_for(self._condition.wait(), timeout=5)
                 except asyncio.TimeoutError:
-                    # No new data for 5 s  → assume upstream is done
-                    return
-    
-    
-    def publish(self, event: EventRow) -> Sha256:
-        """Publish an event to the ledger.
-        
-        Args:
-            event: The complete EventRow to publish
-            
-        Returns:
-            Sha256: The hash of the event's blob
-            
-        Raises:
-            ValueError: If the event fails validation
+                    return                      # generator exhausted
+
+
+
+    # ------------------------------------------------------------------
+    # drylab/ledger.py  (inside class Ledger)
+    # ---------------------------------------------------------------
+    # drylab/ledger.py  ───────────────────────────────────────────────────
+    def publish(self, event: EventRow) -> bool:
         """
-        # Validate the complete event
+        Store *event* exactly once.
+
+        Returns
+        -------
+        bool
+            True  – event row inserted and subscribers notified  
+            False – identical (run_id, schema, sha) already present; nothing inserted
+
+        Raises
+        ------
+        ValueError
+            If schema-validation fails.
+        """
+        # 1. Validate against JSON-Schema
         validator = EventValidator(event)
         if not validator.validate():
             raise ValueError(f"Invalid event: {validator.validation_error}")
 
-        sha = event.header.id
+        run_id, schema_id, sha = event.run_id, event.header.schema_id, event.header.id
+
+        # 2. Skip if artefact already logged for this run
+        exists = self._db.execute(
+            "SELECT 1 FROM events WHERE run_id=? AND schema=? AND sha=?",
+            (run_id, schema_id, sha)
+        ).fetchone()
+        if exists:
+            return False                         # duplicate → caller may ignore
+
+        # 3. Insert blob (dedup on sha) + new event row
         with self._db:
             self._db.execute(
                 "INSERT OR IGNORE INTO blobs (sha, bytes) VALUES (?,?)",
-                (sha, event.blob)
+                (sha, event.blob),
             )
             seq = self._db.execute(
                 "SELECT COALESCE(MAX(seq),0)+1 FROM events WHERE run_id=?",
-                (event.run_id,)
+                (run_id,),
             ).fetchone()[0]
             self._db.execute(
-                "INSERT INTO events(run_id,seq,sha,schema,ts) VALUES(?,?,?,?,strftime('%s','now')*1000)",
-                (event.run_id, seq, sha, event.header.schema_id),
+                "INSERT INTO events(run_id, seq, sha, schema, ts) "
+                "VALUES(?, ?, ?, ?, strftime('%s','now')*1000)",
+                (run_id, seq, sha, schema_id),
             )
-            asyncio.create_task(self._notify())
-        return sha
-    
+
+        # 4. Notify subscribers about the new row
+        asyncio.create_task(self._notify())
+        return True
+
     
     async def _notify(self):
         async with self._condition:

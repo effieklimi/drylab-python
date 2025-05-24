@@ -3,6 +3,14 @@ from typing import Dict, List, Tuple, Union
 from .types import EventRow, EventHeader, SchemaId, Blob
 from .ledger import Ledger
 
+
+# | Step                                                                              | Term we use        | What really happens                    |
+# | --------------------------------------------------------------------------------- | ------------------ | -------------------------------------- |
+# | ① It **waits for** an event whose header matches its `pattern`.                  | “subscribe”        | `ledger.subscribe()` yields the event. |
+# | ② It **processes** the event.                                                    | “handle”           | Your `handle()` coroutine runs.        |
+# | ③ It **produces → publishes** new artefacts that downstream reactors might need. | “emit” / “publish” | You call `self.ledger.publish(...)`.   |
+
+
 Pattern = Dict[str,Union[str,int]]
 
 class Reactor:
